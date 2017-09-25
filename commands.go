@@ -91,3 +91,8 @@ func ListRequests() error {
 
 	return nil
 }
+
+func LoadResponse(id string) ([]byte, error) {
+	responseJsonPath := path.Join(basePath, id, "response.json")
+	return ioutil.ReadFile(responseJsonPath)
+}

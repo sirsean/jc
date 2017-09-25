@@ -14,10 +14,11 @@ var httpClient = &http.Client{Timeout: 60 * time.Second}
 type command string
 
 const (
-	LS  command = "ls"
-	DEL command = "del"
-	NEW command = "new"
-	RUN command = "run"
+	LS   command = "ls"
+	DEL  command = "del"
+	NEW  command = "new"
+	RUN  command = "run"
+	RESP command = "resp"
 )
 
 func getArgCommand() command {
@@ -56,5 +57,11 @@ func main() {
 			log.Fatal(err)
 		}
 		fmt.Println(filename)
+	case RESP:
+		c, err := LoadResponse(getArgId())
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println(string(c))
 	}
 }
