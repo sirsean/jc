@@ -58,6 +58,21 @@ func Execute(r Request) (string, error) {
 	for k, v := range r.Headers {
 		req.Header.Set(k, v)
 	}
+
+	transport := &http.Transport{}
+
+	if r.IsClientCert() {
+		tlsConfig, err := r.GetTlsConfig()
+		if err != nil {
+			return "", err
+		}
+		transport.TLSClientConfig = tlsConfig
+	}
+
+	httpClient := http.Client{
+		Timeout:   60 * time.Second,
+		Transport: transport,
+	}
 	resp, err := httpClient.Do(req)
 	if err != nil {
 		return "", err

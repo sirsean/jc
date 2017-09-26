@@ -3,13 +3,10 @@ package main
 import (
 	"fmt"
 	"log"
-	"net/http"
 	"os"
-	"time"
 )
 
 var basePath = ".jc"
-var httpClient = &http.Client{Timeout: 60 * time.Second}
 
 type command string
 
