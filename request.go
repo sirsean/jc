@@ -6,7 +6,9 @@ import (
 	"crypto/x509"
 	"io"
 	"io/ioutil"
+	"os"
 	"path"
+	"strings"
 )
 
 type Request struct {
@@ -41,12 +43,12 @@ func (r Request) IsClientCert() bool {
 
 func (r Request) GetTlsConfig() (*tls.Config, error) {
 	c := r.ClientCert
-	caCert, err := ioutil.ReadFile(c.CaCertPath)
+	caCert, err := ioutil.ReadFile(expandHome(c.CaCertPath))
 	if err != nil {
 		return nil, err
 	}
 
-	cert, err := tls.LoadX509KeyPair(c.ClientCertPath, c.ClientKeyPath)
+	cert, err := tls.LoadX509KeyPair(expandHome(c.ClientCertPath), expandHome(c.ClientKeyPath))
 	if err != nil {
 		return nil, err
 	}
@@ -59,6 +61,10 @@ func (r Request) GetTlsConfig() (*tls.Config, error) {
 	}
 
 	return &config, nil
+}
+
+func expandHome(in string) string {
+	return strings.Replace(in, "~", os.Getenv("HOME"), -1)
 }
 
 func (r Request) Body() io.Reader {
