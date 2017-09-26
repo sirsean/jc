@@ -4,11 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/sirsean/go-pool"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"path"
+	"sort"
 	"time"
 )
 
@@ -73,20 +75,57 @@ func Execute(r Request) (string, error) {
 	return responseJsonPath, err
 }
 
+type LoadRequestWorkUnit struct {
+	Id    string
+	OutCh chan Request
+}
+
+func (u LoadRequestWorkUnit) Perform() {
+	r, err := LoadRequest(u.Id)
+	if err == nil {
+		u.OutCh <- r
+	}
+}
+
 func ListRequests() error {
 	files, err := ioutil.ReadDir(basePath)
 	if err != nil {
 		return err
 	}
 
-	for _, f := range files {
-		id := f.Name()
-		r, err := LoadRequest(id)
-		if err != nil {
-			fmt.Printf("%s: ?\n", id)
-		} else {
-			fmt.Printf("%s: %s %s\n", id, r.Method, r.Url)
+	p := pool.NewPool(100, 100) // we will read many files at a time
+	p.Start()
+
+	ch := make(chan Request, len(files)) // channel for each request
+	rCh := make(chan []Request, 1)       // result channel for full requests list
+
+	go func() {
+		// we will build up the list of requests in this goroutine
+		requests := make([]Request, 0)
+		for r := range ch {
+			requests = append(requests, r)
 		}
+		// all the requests are in the list, sort it
+		sort.Slice(requests[:], func(i, j int) bool {
+			return requests[i].Id < requests[j].Id
+		})
+		// send the list back to the main thread
+		rCh <- requests
+	}()
+
+	for _, f := range files {
+		p.Add(LoadRequestWorkUnit{
+			Id:    f.Name(),
+			OutCh: ch,
+		})
+	}
+
+	p.Close()
+	close(ch)
+
+	requests := <-rCh
+	for _, r := range requests {
+		fmt.Printf("%s: %s %s\n", r.Id, r.Method, r.Url)
 	}
 
 	return nil
