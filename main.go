@@ -9,6 +9,7 @@ import (
 var basePath = ".jc"
 
 var commandFuncs = map[string]func(){
+	"help": helpCommand,
 	"ls":   listCommand,
 	"list": listCommand,
 	"new":  newCommand,
@@ -18,12 +19,29 @@ var commandFuncs = map[string]func(){
 	"resp": respCommand,
 }
 
+func helpCommand() {
+	fmt.Println(`
+	Usage: jc <command> (<id>)
+
+	Commands:
+		- ls/list
+		- new
+		- del/rm
+		- run
+		- resp
+	`)
+}
+
 func listCommand() {
 	ListRequests()
 }
 
 func newCommand() {
-	filename, err := NewRequest(getArgId())
+	id, err := getArgId()
+	if err != nil {
+		log.Fatal(err)
+	}
+	filename, err := NewRequest(id)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -31,14 +49,22 @@ func newCommand() {
 }
 
 func delCommand() {
-	err := DeleteRequest(getArgId())
+	id, err := getArgId()
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = DeleteRequest(id)
 	if err != nil {
 		log.Fatal(err)
 	}
 }
 
 func runCommand() {
-	r, err := LoadRequest(getArgId())
+	id, err := getArgId()
+	if err != nil {
+		log.Fatal(err)
+	}
+	r, err := LoadRequest(id)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -50,7 +76,11 @@ func runCommand() {
 }
 
 func respCommand() {
-	c, err := LoadResponse(getArgId())
+	id, err := getArgId()
+	if err != nil {
+		log.Fatal(err)
+	}
+	c, err := LoadResponse(id)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -58,11 +88,19 @@ func respCommand() {
 }
 
 func getArgCommand() string {
-	return os.Args[1]
+	if len(os.Args) >= 2 {
+		return os.Args[1]
+	} else {
+		return ""
+	}
 }
 
-func getArgId() string {
-	return os.Args[2]
+func getArgId() (string, error) {
+	if len(os.Args) >= 3 {
+		return os.Args[2], nil
+	} else {
+		return "", fmt.Errorf("invalid id")
+	}
 }
 
 func main() {
@@ -73,5 +111,6 @@ func main() {
 		f()
 	} else {
 		fmt.Println("unknown command")
+		helpCommand()
 	}
 }
