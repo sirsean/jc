@@ -8,18 +8,57 @@ import (
 
 var basePath = ".jc"
 
-type command string
+var commandFuncs = map[string]func(){
+	"ls":   listCommand,
+	"list": listCommand,
+	"new":  newCommand,
+	"del":  delCommand,
+	"rm":   delCommand,
+	"run":  runCommand,
+	"resp": respCommand,
+}
 
-const (
-	LS   command = "ls"
-	DEL  command = "del"
-	NEW  command = "new"
-	RUN  command = "run"
-	RESP command = "resp"
-)
+func listCommand() {
+	ListRequests()
+}
 
-func getArgCommand() command {
-	return command(os.Args[1])
+func newCommand() {
+	filename, err := NewRequest(getArgId())
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(filename)
+}
+
+func delCommand() {
+	err := DeleteRequest(getArgId())
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func runCommand() {
+	r, err := LoadRequest(getArgId())
+	if err != nil {
+		log.Fatal(err)
+	}
+	filename, err := Execute(r)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(filename)
+}
+
+func respCommand() {
+	c, err := LoadResponse(getArgId())
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(string(c))
+}
+
+func getArgCommand() string {
+	return os.Args[1]
 }
 
 func getArgId() string {
@@ -30,35 +69,9 @@ func main() {
 	// make sure the base path is present
 	os.MkdirAll(basePath, os.ModePerm)
 
-	switch getArgCommand() {
-	case LS:
-		ListRequests()
-	case NEW:
-		filename, err := NewRequest(getArgId())
-		if err != nil {
-			log.Fatal(err)
-		}
-		fmt.Println(filename)
-	case DEL:
-		err := DeleteRequest(getArgId())
-		if err != nil {
-			log.Fatal(err)
-		}
-	case RUN:
-		r, err := LoadRequest(getArgId())
-		if err != nil {
-			log.Fatal(err)
-		}
-		filename, err := Execute(r)
-		if err != nil {
-			log.Fatal(err)
-		}
-		fmt.Println(filename)
-	case RESP:
-		c, err := LoadResponse(getArgId())
-		if err != nil {
-			log.Fatal(err)
-		}
-		fmt.Println(string(c))
+	if f, ok := commandFuncs[getArgCommand()]; ok {
+		f()
+	} else {
+		fmt.Println("unknown command")
 	}
 }
