@@ -36,6 +36,7 @@ The following commands are supported:
 - `new <id>`: Create a new (empty) request
 - `del <id>`: Delete an existing request
 - `run <id>`: Execute an existing request
+- `resp <id>`: View the result of a previously-exected request
 
 The `id` is an arbitrary string (no spaces) that you can use to identify
 your requests.
@@ -59,6 +60,11 @@ That file contains the empty request:
         "username": "",
         "password": ""
     },
+    "client_cert": {
+        "ca_cert": "",
+        "client_cert": "",
+        "client_key": ""
+    },
     "headers": null
 }
 ```
@@ -74,12 +80,17 @@ Edit it to describe the request you want to make:
         "username": "",
         "password": ""
     },
+    "client_cert": {
+        "ca_cert": "",
+        "client_cert": "",
+        "client_key": ""
+    },
     "headers": null
 }
 ```
 
-(Note that if you don't enter in your HTTP Basic Auth or headers, they will
-be ignored.)
+(Note that if you don't enter in your HTTP Basic Auth or client cert or headers,
+they will be ignored.)
 
 Now you can see your request in the list:
 
@@ -98,6 +109,12 @@ $ jc run get-things
 
 That file contains the response body of the request. Also displayed is the
 duration of the request, which can be useful information.
+
+You can view the response:
+
+```
+$ jc resp get-things | less
+```
 
 You can also do a POST request with a JSON body.
 
