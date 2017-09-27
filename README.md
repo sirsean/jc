@@ -36,7 +36,7 @@ The following commands are supported:
 - `new <id>`: Create a new (empty) request
 - `del <id>`: Delete an existing request
 - `run <id>`: Execute an existing request
-- `resp <id>`: View the result of a previously-exected request
+- `resp <id>`: View the result of a previously-executed request
 
 The `id` is an arbitrary string (no spaces) that you can use to identify
 your requests.
