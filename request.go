@@ -9,6 +9,7 @@ import (
 	"os"
 	"path"
 	"strings"
+	"time"
 )
 
 type Request struct {
@@ -18,6 +19,7 @@ type Request struct {
 	BasicAuth  BasicAuth         `json:"basic_auth"`
 	ClientCert ClientCert        `json:"client_cert"`
 	Headers    map[string]string `json:"headers"`
+	Timeout    time.Duration     `json:"timeout"`
 }
 
 type BasicAuth struct {

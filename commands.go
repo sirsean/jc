@@ -19,7 +19,8 @@ func NewRequest(id string) (string, error) {
 	os.MkdirAll(requestDirPath, os.ModePerm)
 	requestJsonPath := path.Join(basePath, id, "request.json")
 	r := Request{
-		Id: id,
+		Id:      id,
+		Timeout: 60,
 	}
 	jsonBytes, err := json.Marshal(r)
 	if err != nil {
@@ -42,6 +43,9 @@ func LoadRequest(id string) (Request, error) {
 		return r, err
 	}
 	err = json.Unmarshal(raw, &r)
+	if r.Timeout <= 0 {
+		r.Timeout = 60
+	}
 	return r, err
 }
 
@@ -70,7 +74,7 @@ func Execute(r Request) (string, error) {
 	}
 
 	httpClient := http.Client{
-		Timeout:   60 * time.Second,
+		Timeout:   r.Timeout * time.Second,
 		Transport: transport,
 	}
 	resp, err := httpClient.Do(req)
