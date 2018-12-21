@@ -7,7 +7,6 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-	"path"
 	"strings"
 	"time"
 )
@@ -70,8 +69,7 @@ func expandHome(in string) string {
 }
 
 func (r Request) Body() io.Reader {
-	bodyPath := path.Join(basePath, r.Id, "body.json")
-	raw, err := ioutil.ReadFile(bodyPath)
+	raw, err := ioutil.ReadFile(RequestBodyJsonPath(r.Id))
 	if err != nil {
 		return nil
 	}

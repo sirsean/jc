@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/codeskyblue/go-sh"
 	"log"
 	"os"
 )
@@ -17,6 +18,8 @@ var commandFuncs = map[string]func(){
 	"rm":   delCommand,
 	"run":  runCommand,
 	"resp": respCommand,
+	"req":  reqCommand,
+	"body": bodyCommand,
 }
 
 func helpCommand() {
@@ -28,7 +31,9 @@ func helpCommand() {
 		- new
 		- del/rm
 		- run
-		- resp
+		- resp (print response)
+		- req (edit request)
+		- body (edit request body)
 	`)
 }
 
@@ -73,6 +78,8 @@ func runCommand() {
 		log.Fatal(err)
 	}
 	fmt.Println(filename)
+
+	sh.Command("less", filename).Run()
 }
 
 func respCommand() {
@@ -85,6 +92,24 @@ func respCommand() {
 		log.Fatal(err)
 	}
 	fmt.Println(string(c))
+}
+
+func reqCommand() {
+	id, err := getArgId()
+	if err != nil {
+		log.Fatal(err)
+	}
+	path := RequestJsonPath(id)
+	sh.Command("vim", path).SetStdin(os.Stdin).Run()
+}
+
+func bodyCommand() {
+	id, err := getArgId()
+	if err != nil {
+		log.Fatal(err)
+	}
+	path := RequestBodyJsonPath(id)
+	sh.Command("vim", path).SetStdin(os.Stdin).Run()
 }
 
 func getArgCommand() string {

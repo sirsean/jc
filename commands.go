@@ -14,6 +14,14 @@ import (
 	"time"
 )
 
+func RequestJsonPath(id string) string {
+	return path.Join(basePath, id, "request.json")
+}
+
+func RequestBodyJsonPath(id string) string {
+	return path.Join(basePath, id, "body.json")
+}
+
 func NewRequest(id string) (string, error) {
 	requestDirPath := path.Join(basePath, id)
 	os.MkdirAll(requestDirPath, os.ModePerm)
@@ -37,8 +45,7 @@ func DeleteRequest(id string) error {
 
 func LoadRequest(id string) (Request, error) {
 	var r Request
-	requestJsonPath := path.Join(basePath, id, "request.json")
-	raw, err := ioutil.ReadFile(requestJsonPath)
+	raw, err := ioutil.ReadFile(RequestJsonPath(id))
 	if err != nil {
 		return r, err
 	}
