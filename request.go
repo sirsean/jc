@@ -6,6 +6,7 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"errors"
+	"github.com/sirsean/jc/path"
 	"io"
 	"io/ioutil"
 	"os"
@@ -101,7 +102,7 @@ func expandHome(in string) string {
 }
 
 func (r Request) Body() io.Reader {
-	raw, err := ioutil.ReadFile(RequestBodyJsonPath(r.Id))
+	raw, err := ioutil.ReadFile(path.RequestBodyPath(r.Id))
 	if err != nil {
 		return nil
 	}

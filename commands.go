@@ -5,43 +5,28 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/sirsean/go-pool"
+	j "github.com/sirsean/jc/json"
+	p "github.com/sirsean/jc/path"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
-	"path"
 	"sort"
 	"time"
 )
-
-func RequestJsonPath(id string) string {
-	return path.Join(basePath, id, "request.json")
-}
-
-func RequestBodyJsonPath(id string) string {
-	return path.Join(basePath, id, "body.json")
-}
-
-func ResponseJsonPath(id string) string {
-	return path.Join(basePath, id, "response.json")
-}
-
-func writeJson(filename string, bytes []byte) error {
-	return ioutil.WriteFile(filename, prettyJson(bytes), 0666)
-}
 
 func writeRequestJson(filename string, req Request) error {
 	jsonBytes, err := json.Marshal(req)
 	if err != nil {
 		return err
 	}
-	return writeJson(filename, jsonBytes)
+	return j.Write(filename, jsonBytes)
 }
 
 func NewRequest(id string) (string, error) {
-	requestDirPath := path.Join(basePath, id)
+	requestDirPath := p.RequestDirPath(id)
 	os.MkdirAll(requestDirPath, os.ModePerm)
-	requestJsonPath := RequestJsonPath(id)
+	requestJsonPath := p.RequestPath(id)
 	r := Request{
 		Id:      id,
 		Timeout: Duration{60 * time.Second},
@@ -54,18 +39,18 @@ func CopyRequest(fromId, toId string) error {
 	from, err := LoadRequest(fromId)
 	from.Id = toId
 
-	requestDirPath := path.Join(basePath, toId)
+	requestDirPath := p.RequestDirPath(toId)
 	os.MkdirAll(requestDirPath, os.ModePerm)
 
-	err = writeRequestJson(RequestJsonPath(toId), from)
+	err = writeRequestJson(p.RequestPath(toId), from)
 	if err != nil {
 		return err
 	}
 
-	raw, err := ioutil.ReadFile(RequestBodyJsonPath(fromId))
+	raw, err := ioutil.ReadFile(p.RequestBodyPath(fromId))
 	if err == nil {
 		// no error means there was a body file, so copy it
-		err = ioutil.WriteFile(RequestBodyJsonPath(toId), raw, 0666)
+		err = ioutil.WriteFile(p.RequestBodyPath(toId), raw, 0666)
 		if err != nil {
 			return err
 		}
@@ -75,13 +60,12 @@ func CopyRequest(fromId, toId string) error {
 }
 
 func DeleteRequest(id string) error {
-	requestDirPath := path.Join(basePath, id)
-	return os.RemoveAll(requestDirPath)
+	return os.RemoveAll(p.RequestDirPath(id))
 }
 
 func LoadRequest(id string) (Request, error) {
 	var r Request
-	raw, err := ioutil.ReadFile(RequestJsonPath(id))
+	raw, err := ioutil.ReadFile(p.RequestPath(id))
 	if err != nil {
 		return r, err
 	}
@@ -134,8 +118,8 @@ func Execute(r Request) (string, error) {
 	d := time.Since(start)
 	fmt.Println(d)
 
-	responseJsonPath := ResponseJsonPath(r.Id)
-	err = writeJson(responseJsonPath, buf.Bytes())
+	responseJsonPath := p.ResponsePath(r.Id)
+	err = j.Write(responseJsonPath, buf.Bytes())
 	return responseJsonPath, err
 }
 
@@ -152,7 +136,7 @@ func (u LoadRequestWorkUnit) Perform() {
 }
 
 func ListRequests() error {
-	files, err := ioutil.ReadDir(basePath)
+	files, err := p.ListFiles()
 	if err != nil {
 		return err
 	}
@@ -196,5 +180,5 @@ func ListRequests() error {
 }
 
 func LoadResponse(id string) ([]byte, error) {
-	return ioutil.ReadFile(ResponseJsonPath(id))
+	return ioutil.ReadFile(p.ResponsePath(id))
 }

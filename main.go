@@ -3,11 +3,10 @@ package main
 import (
 	"fmt"
 	"github.com/codeskyblue/go-sh"
+	"github.com/sirsean/jc/path"
 	"log"
 	"os"
 )
-
-var basePath = ".jc"
 
 var commandFuncs = map[string]func(){
 	"help": helpCommand,
@@ -117,7 +116,7 @@ func reqCommand() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	path := RequestJsonPath(id)
+	path := path.RequestPath(id)
 	sh.Command("vim", path).SetStdin(os.Stdin).Run()
 }
 
@@ -126,7 +125,7 @@ func bodyCommand() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	path := RequestBodyJsonPath(id)
+	path := path.RequestBodyPath(id)
 	sh.Command("vim", path).SetStdin(os.Stdin).Run()
 }
 
@@ -156,7 +155,7 @@ func getArgId() (string, error) {
 
 func main() {
 	// make sure the base path is present
-	os.MkdirAll(basePath, os.ModePerm)
+	path.MakeBasePath()
 
 	if f, ok := commandFuncs[getArgCommand()]; ok {
 		f()
