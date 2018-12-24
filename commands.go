@@ -22,20 +22,48 @@ func RequestBodyJsonPath(id string) string {
 	return path.Join(basePath, id, "body.json")
 }
 
+func writeRequestJson(filename string, req Request) error {
+	jsonBytes, err := json.Marshal(req)
+	if err != nil {
+		return err
+	}
+	return ioutil.WriteFile(filename, prettyJson(jsonBytes), 0666)
+}
+
 func NewRequest(id string) (string, error) {
 	requestDirPath := path.Join(basePath, id)
 	os.MkdirAll(requestDirPath, os.ModePerm)
-	requestJsonPath := path.Join(basePath, id, "request.json")
+	requestJsonPath := RequestJsonPath(id)
 	r := Request{
 		Id:      id,
 		Timeout: 60,
 	}
-	jsonBytes, err := json.Marshal(r)
-	if err != nil {
-		return "", err
-	}
-	err = ioutil.WriteFile(requestJsonPath, prettyJson(jsonBytes), 0666)
+	err := writeRequestJson(requestJsonPath, r)
 	return requestJsonPath, err
+}
+
+func CopyRequest(fromId, toId string) error {
+	from, err := LoadRequest(fromId)
+	from.Id = toId
+
+	requestDirPath := path.Join(basePath, toId)
+	os.MkdirAll(requestDirPath, os.ModePerm)
+
+	err = writeRequestJson(RequestJsonPath(toId), from)
+	if err != nil {
+		return err
+	}
+
+	raw, err := ioutil.ReadFile(RequestBodyJsonPath(fromId))
+	if err == nil {
+		// no error means there was a body file, so copy it
+		err = ioutil.WriteFile(RequestBodyJsonPath(toId), raw, 0666)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func DeleteRequest(id string) error {

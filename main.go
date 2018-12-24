@@ -14,6 +14,7 @@ var commandFuncs = map[string]func(){
 	"ls":   listCommand,
 	"list": listCommand,
 	"new":  newCommand,
+	"cp":   copyCommand,
 	"del":  delCommand,
 	"rm":   delCommand,
 	"run":  runCommand,
@@ -29,6 +30,7 @@ func helpCommand() {
 	Commands:
 		- ls/list
 		- new
+		- cp <from-id> <to-id>
 		- del/rm
 		- run
 		- resp (print response)
@@ -51,6 +53,22 @@ func newCommand() {
 		log.Fatal(err)
 	}
 	fmt.Println(filename)
+}
+
+func copyCommand() {
+	fromId, err := getArgId()
+	if err != nil {
+		log.Fatal(err)
+	}
+	toId, err := getArgAt(3)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = CopyRequest(fromId, toId)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func delCommand() {
@@ -120,11 +138,19 @@ func getArgCommand() string {
 	}
 }
 
-func getArgId() (string, error) {
-	if len(os.Args) >= 3 {
-		return os.Args[2], nil
+func getArgAt(index int) (string, error) {
+	if len(os.Args) >= (index + 1) {
+		return os.Args[index], nil
 	} else {
+		return "", fmt.Errorf("invalid arg index")
+	}
+}
+
+func getArgId() (string, error) {
+	if id, err := getArgAt(2); err != nil {
 		return "", fmt.Errorf("invalid id")
+	} else {
+		return id, err
 	}
 }
 
