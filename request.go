@@ -4,12 +4,44 @@ import (
 	"bytes"
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/json"
+	"errors"
 	"io"
 	"io/ioutil"
 	"os"
 	"strings"
 	"time"
 )
+
+type Duration struct {
+	time.Duration
+}
+
+func (d Duration) MarshalJSON() ([]byte, error) {
+	return json.Marshal(d.String())
+}
+
+func (d *Duration) UnmarshalJSON(b []byte) error {
+	var v interface{}
+	if err := json.Unmarshal(b, &v); err != nil {
+		return err
+	}
+	switch value := v.(type) {
+	case float64:
+		// if given as a number, treat as seconds
+		d.Duration = time.Duration(value) * time.Second
+		return nil
+	case string:
+		var err error
+		d.Duration, err = time.ParseDuration(value)
+		if err != nil {
+			return err
+		}
+		return nil
+	default:
+		return errors.New("invalid duration")
+	}
+}
 
 type Request struct {
 	Id         string            `json:"id"`
@@ -18,7 +50,7 @@ type Request struct {
 	BasicAuth  BasicAuth         `json:"basic_auth"`
 	ClientCert ClientCert        `json:"client_cert"`
 	Headers    map[string]string `json:"headers"`
-	Timeout    time.Duration     `json:"timeout"`
+	Timeout    Duration          `json:"timeout"`
 }
 
 type BasicAuth struct {

@@ -36,7 +36,7 @@ func NewRequest(id string) (string, error) {
 	requestJsonPath := RequestJsonPath(id)
 	r := Request{
 		Id:      id,
-		Timeout: 60,
+		Timeout: Duration{60 * time.Second},
 	}
 	err := writeRequestJson(requestJsonPath, r)
 	return requestJsonPath, err
@@ -78,8 +78,8 @@ func LoadRequest(id string) (Request, error) {
 		return r, err
 	}
 	err = json.Unmarshal(raw, &r)
-	if r.Timeout <= 0 {
-		r.Timeout = 60
+	if r.Timeout.Seconds() <= 0 {
+		r.Timeout = Duration{60 * time.Second}
 	}
 	return r, err
 }
@@ -109,7 +109,7 @@ func Execute(r Request) (string, error) {
 	}
 
 	httpClient := http.Client{
-		Timeout:   r.Timeout * time.Second,
+		Timeout:   r.Timeout.Duration,
 		Transport: transport,
 	}
 	resp, err := httpClient.Do(req)
