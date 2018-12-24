@@ -22,12 +22,20 @@ func RequestBodyJsonPath(id string) string {
 	return path.Join(basePath, id, "body.json")
 }
 
+func ResponseJsonPath(id string) string {
+	return path.Join(basePath, id, "response.json")
+}
+
+func writeJson(filename string, bytes []byte) error {
+	return ioutil.WriteFile(filename, prettyJson(bytes), 0666)
+}
+
 func writeRequestJson(filename string, req Request) error {
 	jsonBytes, err := json.Marshal(req)
 	if err != nil {
 		return err
 	}
-	return ioutil.WriteFile(filename, prettyJson(jsonBytes), 0666)
+	return writeJson(filename, jsonBytes)
 }
 
 func NewRequest(id string) (string, error) {
@@ -126,8 +134,8 @@ func Execute(r Request) (string, error) {
 	d := time.Since(start)
 	fmt.Println(d)
 
-	responseJsonPath := path.Join(basePath, r.Id, "response.json")
-	err = ioutil.WriteFile(responseJsonPath, prettyJson(buf.Bytes()), 0666)
+	responseJsonPath := ResponseJsonPath(r.Id)
+	err = writeJson(responseJsonPath, buf.Bytes())
 	return responseJsonPath, err
 }
 
@@ -188,6 +196,5 @@ func ListRequests() error {
 }
 
 func LoadResponse(id string) ([]byte, error) {
-	responseJsonPath := path.Join(basePath, id, "response.json")
-	return ioutil.ReadFile(responseJsonPath)
+	return ioutil.ReadFile(ResponseJsonPath(id))
 }
