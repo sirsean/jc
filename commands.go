@@ -121,6 +121,8 @@ func Execute(r Request) (string, error) {
 	buf.ReadFrom(resp.Body)
 	resp.Body.Close()
 
+	fmt.Println(resp.Status)
+
 	d := time.Since(start)
 	fmt.Println(d)
 
